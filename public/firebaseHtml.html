@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>Firebase Messaging Demo</title>
+</head>
+<body>
+    <div id="token"></div>
+    <div id="msg"></div>
+    <div id="notis"></div>
+    <div id="err"></div>
+    <script src="https://www.gstatic.com/firebasejs/7.16.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/7.16.1/firebase-messaging.js"></script>
+ <script>
+  // Import the functions you need from the SDKs you need
+  //import { initializeApp } from "https://www.gstatic.com/firebasejs/9.5.0/firebase-app.js";
+  //import { getAnalytics } from "https://www.gstatic.com/firebasejs/9.5.0/firebase-analytics.js";
+  // TODO: Add SDKs for Firebase products that you want to use
+  // https://firebase.google.com/docs/web/setup#available-libraries
+
+  // Your web app's Firebase configuration
+  // For Firebase JS SDK v7.20.0 and later, measurementId is optional
+
+  MsgElem = document.getElementById("msg");
+  TokenElem = document.getElementById("token");
+  NotisElem = document.getElementById("notis");
+  ErrElem = document.getElementById("err");
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyB4u7WP-vCC1dryW8jBeL966aNUnzH4QFA",
+    authDomain: "fir-notifi-a2b80.firebaseapp.com",
+    projectId: "fir-notifi-a2b80",
+    storageBucket: "fir-notifi-a2b80.appspot.com",
+    messagingSenderId: "1063120089250",
+    appId: "1:1063120089250:web:b69c266af1be76614127fb",
+    measurementId: "G-1V6VC48MT2"
+  };
+
+  // Initialize Firebase
+  firebase.initializeApp(firebaseConfig);
+  //const app = initializeApp(firebaseConfig);
+  //const analytics = getAnalytics(app);
+    const messaging = firebase.messaging();
+        messaging
+            .requestPermission()
+            .then(function () {
+                MsgElem.innerHTML = "Notification permission granted." 
+                console.log("Notification permission granted.");
+                
+                // get the token in the form of promise
+                return messaging.getToken()
+            })
+            .then(function(token) {
+                TokenElem.innerHTML = "token is : " + token
+                subscribeTokenToTopic(token,'test');
+            })
+            .catch(function (err) {
+                ErrElem.innerHTML =  ErrElem.innerHTML + "; " + err
+                console.log("Unable to get permission to notify.", err);
+            });
+
+        let enableForegroundNotification = true;
+        messaging.onMessage(function(payload) {
+            console.log("Message received. ", payload);
+            NotisElem.innerHTML = NotisElem.innerHTML + JSON.stringify(payload);
+
+            if(enableForegroundNotification) {
+                const {title, ...options} = JSON.parse(payload.data.notification);
+                navigator.serviceWorker.getRegistrations().then(registration => {
+                    registration[0].showNotification(title, options);
+                });
+            }
+        });
+        
+        function subscribeTokenToTopic(token, topic) {
+          console.log(token)
+          console.log(topic)
+          var fetchString = "https://iid.googleapis.com/iid/v1/" + token + "/rel/topics/" + topic
+            //fetch('https://iid.googleapis.com/iid/v1/${token}/rel/topics/${topic}', {
+            console.log(fetchString)
+            fetch(fetchString, {
+              method: 'POST',
+              headers: new Headers({
+              'Authorization': 'key=AAAA94blMKI:APA91bGGQVvCmus04xekIy0lHZAOA2DVjBN38hTxJCSPWM3-KP9AcLBEoAc-OfqD8_ebOH5d_5Y4IFw62nY6mcEXg0hkTQNG17C17xxzdU3MDKrlFi6j81b2bLvUnEpwvPnDAlItKlTe'
+              })
+            })
+              .then((response) => {
+                if (response.status < 200 || response.status >= 400) {
+                  console.log(response.status, response);
+                }
+                console.log(topic + ' is subscribed');
+              })
+              .catch((error) => {
+                console.error(error.result);
+              });
+            return true;
+          }
+</script>
+</body>
+</html>

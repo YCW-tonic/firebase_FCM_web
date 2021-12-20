@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title></title>
+</head>
+<body>
+	<script src="https://www.gstatic.com/firebasejs/7.16.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/7.16.1/firebase-messaging.js"></script>
+    <script type="text/javascript">
+    	const firebaseConfig = {
+		    apiKey: "AIzaSyB4u7WP-vCC1dryW8jBeL966aNUnzH4QFA",
+		    authDomain: "fir-notifi-a2b80.firebaseapp.com",
+		    projectId: "fir-notifi-a2b80",
+		    storageBucket: "fir-notifi-a2b80.appspot.com",
+		    messagingSenderId: "1063120089250",
+		    appId: "1:1063120089250:web:b69c266af1be76614127fb",
+		    measurementId: "G-1V6VC48MT2"
+		  };
+		const messaging = firebase.messaging();
+		messaging.requestPermission()
+		  .then(res => {
+		    // 若允許通知 -> 向 firebase 拿 token
+		    return messaging.getToken();
+		  }, err => {
+		    // 若拒絕通知
+		    console.log(err);  
+		  })
+		  .then(token => {
+		    // 成功取得 token
+		    postToken(token); // 打給後端 api
+		    console.log(token)
+
+		    
+		 // 接收到通知時
+		messaging.onMessage(payload => {
+		    console.log('onMessage: ', payload);
+		    var notifyMsg = payload.notification;
+		    var notification = new Notification(notifyMsg.title, {
+		        body: notifyMsg.body,
+		        icon: notifyMsg.icon
+		    });
+		    notification.onclick = function (e) { // 綁定點擊事件
+		        e.preventDefault(); // prevent the browser from focusing the Notification's tab
+		        window.open(notifyMsg.click_action);
+		    }
+		})
+    </script>
+</body>
+</html>
